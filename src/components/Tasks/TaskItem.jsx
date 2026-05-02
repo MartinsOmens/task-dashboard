@@ -7,7 +7,8 @@ const TaskItem = ({ task, onToggle, onDelete }) => {
         <input
           type="checkbox"
           checked={task.completed}
-          onChange={() => onToggle(task.id)}
+          // onChange={() => onToggle(task.id)}
+          onClick={() => onToggle(task)}
           className="h-4 w-4 text-blue-600 rounded border-gray-300"
         />
         <motion.span

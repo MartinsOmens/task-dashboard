@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser, saveUser } from "../lib/dummyAuth";
 import { toast } from "react-toastify";
+import { supabase } from "../lib/supabaseClient";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -11,22 +11,29 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
 
-    const fakeUser = {
-      firstName,
-      surName,
+    const { error } = await supabase.auth.signUp({
       email,
       password,
-      id: Date.now(),
-    };
+      options: {
+        data: {
+          first_name: firstName,
+          surname: surName,
+        },
+      },
+    });
 
-    saveUser(fakeUser); // store account
-    loginUser(fakeUser); // log them in
-    toast.success("Account created 🎉");
-    navigate("/login");
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Account created 🎉");
+      navigate("/login");
+    }
   };
+
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

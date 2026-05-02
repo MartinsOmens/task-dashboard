@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
@@ -13,34 +13,29 @@ import { supabase } from "../lib/supabaseClient"; // adjust path to your supabas
 
 const AppRouter = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // 1. Check for existing session when app loads
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        // If already logged in and on a public route, redirect to dashboard
-        const publicRoutes = ["/", "/login", "/signup"];
-        if (publicRoutes.includes(window.location.pathname)) {
-          navigate("/dashboard", { replace: true });
-        }
-      }
-    });
+    const publicRoutes = ["/", "/login", "/signup"];
 
-    // 2. Listen for auth changes (e.g., after OAuth redirect)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        // User just signed in via Google (or email)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const path = location.pathname;
+
+      // ✅ logged in
+      if (session && publicRoutes.includes(path)) {
         navigate("/dashboard", { replace: true });
-      } else if (event === "SIGNED_OUT") {
-        // Optional: redirect to home or login
-        navigate("/", { replace: true });
+      }
+
+      // 🚪 logged out
+      if (event === "SIGNED_OUT") {
+        navigate("/login", { replace: true });
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
+    return () => subscription.unsubscribe();
+  }, [navigate, location.pathname]);
 
   return (
     <>
